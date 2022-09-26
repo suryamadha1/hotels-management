@@ -25,7 +25,7 @@ public class GlobalExceptionHandler extends Exception {
 		return new ResponseEntity<String>("OOPS! Invalid name for coupon. Please try again.", HttpStatus.BAD_REQUEST);
 	}
 	
-	@ExceptionHandler(value = CouponInvalidNameException.class)
+	@ExceptionHandler(value = CouponInvalidAmountException.class)
 	public ResponseEntity<String> cpnInvalidAmount(CouponInvalidAmountException couponInvalidAmountException){
 		return new ResponseEntity<String>("OOPS! Invalid amount. Please check and try again.", HttpStatus.BAD_REQUEST);
 	}
