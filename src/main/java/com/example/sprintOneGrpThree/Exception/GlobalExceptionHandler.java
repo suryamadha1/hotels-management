@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
+
 @ControllerAdvice
 public class GlobalExceptionHandler extends Exception {
 	
@@ -21,6 +23,16 @@ public class GlobalExceptionHandler extends Exception {
 	@ExceptionHandler(value = CouponInvalidNameException.class)
 	public ResponseEntity<String> cpnInvalidName(CouponInvalidNameException couponInvalidNameException){
 		return new ResponseEntity<String>("OOPS! Invalid name for coupon. Please try again.", HttpStatus.BAD_REQUEST);
+	}
+	
+	@ExceptionHandler(value = CouponInvalidNameException.class)
+	public ResponseEntity<String> cpnInvalidAmount(CouponInvalidAmountException couponInvalidAmountException){
+		return new ResponseEntity<String>("OOPS! Invalid amount. Please check and try again.", HttpStatus.BAD_REQUEST);
+	}
+	
+	@ExceptionHandler(value = CouponInvalidPercentageException.class)
+	public ResponseEntity<String> cpnInvalidPercentage(CouponInvalidPercentageException couponInvalidPercentageException){
+		return new ResponseEntity<String>("OOPS! Invalid percentage. Please check and try again.", HttpStatus.BAD_REQUEST);
 	}
 
 }
