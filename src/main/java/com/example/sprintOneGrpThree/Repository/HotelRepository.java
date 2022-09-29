@@ -5,11 +5,11 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.example.sprintOneGrpThree.Entity.Staff;
+import com.example.sprintOneGrpThree.Entity.Hotel;
 
 @Repository
-public interface StaffRepository extends JpaRepository<Staff, Integer> {
+public interface HotelRepository extends JpaRepository<Hotel, Integer>{
 	
-	List<Staff> findByEmail(String email);
+	List<Hotel> findByName(String name);
 
 }

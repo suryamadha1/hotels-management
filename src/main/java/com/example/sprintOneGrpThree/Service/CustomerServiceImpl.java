@@ -1,5 +1,6 @@
 package com.example.sprintOneGrpThree.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -10,13 +11,15 @@ import org.springframework.stereotype.Service;
 import com.example.sprintOneGrpThree.Entity.Coupon;
 import com.example.sprintOneGrpThree.Entity.Customer;
 import com.example.sprintOneGrpThree.Entity.Session;
-import com.example.sprintOneGrpThree.Exception.CouponDoesNotExistException;
+import com.example.sprintOneGrpThree.Entity.Staff;
+import com.example.sprintOneGrpThree.Exception.CustomerScopeViolationException;
 import com.example.sprintOneGrpThree.Repository.CouponRepository;
 import com.example.sprintOneGrpThree.Repository.CustomerRepository;
 import com.example.sprintOneGrpThree.Repository.SessionRepository;
+import com.example.sprintOneGrpThree.Repository.TestimonialRepository;
 
 @Service
-public class CustomerServiceImpl implements CustomerService {
+public class CustomerServiceImpl implements CustomerService{
 	
 	@Autowired
 	private CustomerRepository customerRepository;
@@ -25,18 +28,28 @@ public class CustomerServiceImpl implements CustomerService {
 	private SessionRepository sessionRepository;
 	
 	@Autowired
-	private CouponRepository couponRepository;
+	private TestimonialRepository testimonialRepository;
 	
+	@Autowired
+	private CouponRepository couponRepository;
+
 	@Override
-	public String signUpCustomer(Customer c) throws CouponDoesNotExistException {
-		
-		List<Coupon> coupons = couponRepository.findAll();
+	public String signUpCustomer(Customer c) {
 		
 		List<Customer> customers = customerRepository.findAll();
 		boolean res = false;
 		if(!customers.isEmpty()) {
 		res = customers.stream().anyMatch(n->n.getEmail().equals(c.getEmail()));
 		}
+		Coupon coupon = new Coupon();
+		coupon.setCoupon_id(1);
+		coupon.setAmount(0.0);
+		coupon.setName("WELCOME10%OFF");
+		coupon.setPercentage(10);
+		List<Coupon> couponList = new ArrayList<>();
+		couponList.add(coupon);
+		c.setCoupons(couponList);
+		couponRepository.save(coupon);
 		if(res) {
 			return "Email id already exists";
 		}
@@ -52,6 +65,9 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public String loginCustomer(Customer c) {
+		if(sessionRepository.count()==0) {
+			return "Operation cannot be performed";
+		}
 		List<Customer> customers = customerRepository.findAll();
 		List<Customer> storeId = null;
 		boolean res = false;
@@ -71,5 +87,58 @@ public class CustomerServiceImpl implements CustomerService {
 			return "login failed";
 		}
 	}
+
+	@Override
+	public String updateCustomer(Customer cust) {
+		
+		if(sessionRepository.count()==0) {
+			return "Update operation cannot be performed";
+		}
+		Session obj = sessionRepository.findAll().stream().findFirst().get();
+	
+		if(!cust.getEmail().equals(obj.getEmail())) {
+				return "Email cannot be udpated";
+			}
+	
+		customerRepository.save(new Customer(obj.getId(),
+				cust.getName(),
+				cust.getEmail(),
+				cust.getGender(),
+				cust.getPasscode(),
+				cust.getMobile(),
+				cust.getCoupons()));
+		return "Your details are updated";
+		}
+
+	@Override
+	public List<Customer> getCustomerByEmail(String email) {
+		List<Customer> custList = customerRepository.findByEmail(email);
+		return custList;
+	}
+
+	@Override
+	public List<Customer> getAllCustomers() throws CustomerScopeViolationException {
+		boolean res = sessionRepository.findAll().stream().anyMatch(n->n.getType().equals("staff"));
+		if(!res) {
+			throw new CustomerScopeViolationException();
+		}
+		List<Customer> custList = customerRepository.findAll();
+		return custList;
+	}
+
+	@Override
+	public String deleteCustomer(String email) {
+		List<Customer> c  = customerRepository.findByEmail(email);
+		if(c.isEmpty()) {
+			return "Customer with given email id not found";
+		}
+		List<Integer> list = testimonialRepository.findAll().stream().filter(n->n.getCustomer().getEmail().equals(
+				email)).map(n->n.getTestimonialId()).collect(Collectors.toList());
+		testimonialRepository.deleteAllById(list);
+		
+		customerRepository.deleteById(c.get(0).getCustomerId());
+		return "Customer record deleted";
+	}
+		
 
 }

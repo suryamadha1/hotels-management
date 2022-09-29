@@ -43,5 +43,19 @@ public class Customer {
 			)
 	private List<Coupon> coupons = new ArrayList<>();
 
+	public Customer(int customerId, String name, String email, String gender, String passcode, String mobile,
+			List<Coupon> coupons) {
+		super();
+		this.customerId = customerId;
+		this.name = name;
+		this.email = email;
+		this.gender = gender;
+		this.passcode = passcode;
+		this.mobile = mobile;
+		this.coupons = coupons;
+	}
+	
+	
+
 
 }
