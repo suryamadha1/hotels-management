@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.sprintOneGrpThree.Entity.Coupon;
+import com.example.sprintOneGrpThree.Exception.CouponAccessViolationException;
 import com.example.sprintOneGrpThree.Exception.CouponAlreadyExistsException;
 import com.example.sprintOneGrpThree.Exception.CouponDoesNotExistException;
 import com.example.sprintOneGrpThree.Exception.CouponInvalidAmountException;
@@ -31,19 +32,19 @@ public class CouponController {
 	
 	@PostMapping("/addCoupon")
 	@ResponseBody
-	public ResponseEntity<String> saveCoupon(@RequestBody Coupon coupon) throws CouponAlreadyExistsException, CouponInvalidNameException, CouponInvalidAmountException, CouponInvalidPercentageException{
+	public ResponseEntity<String> saveCoupon(@RequestBody Coupon coupon) throws CouponAlreadyExistsException, CouponInvalidNameException, CouponInvalidAmountException, CouponInvalidPercentageException, CouponAccessViolationException{
 		Coupon result = couponServ.saveCoupon(coupon);
 		return new ResponseEntity<String>("Hurray! Coupon saved successfully.", HttpStatus.CREATED);
 	}
 	
 	@PostMapping("/addCoupons")
 	@ResponseBody
-	public ResponseEntity<String> saveCoupons(@RequestBody List<Coupon> list) throws CouponAlreadyExistsException, CouponInvalidAmountException, CouponInvalidPercentageException, CouponInvalidNameException{
+	public ResponseEntity<String> saveCoupons(@RequestBody List<Coupon> list) throws CouponAlreadyExistsException, CouponInvalidAmountException, CouponInvalidPercentageException, CouponInvalidNameException, CouponAccessViolationException{
 		 List<Coupon> result = couponServ.saveCoupons(list);
 		 return new ResponseEntity<String>("Hurray! coupons saved successfully.",HttpStatus.CREATED);
 	}
 	
-	@GetMapping("/coupons")
+	@GetMapping("/getCoupons")
 	@ResponseBody
 	public ResponseEntity<List<Coupon>> getCoupons(){
 		List<Coupon> result = couponServ.getCoupons();
@@ -52,7 +53,7 @@ public class CouponController {
 		return new ResponseEntity<List<Coupon>>(result, HttpStatus.FOUND);
 	}
 	
-	@GetMapping("/coupon/{id}")
+	@GetMapping("/getCoupon/id/{id}")
 	@ResponseBody
 	public ResponseEntity<Optional<Coupon>> getCouponById(@PathVariable int id) throws CouponDoesNotExistException{
 		Optional<Coupon> result = couponServ.getCouponById(id);
@@ -63,20 +64,24 @@ public class CouponController {
 	
 	@PutMapping("/coupon/update")
 	@ResponseBody
-	public ResponseEntity<String> updateCoupon(@RequestBody Coupon coupon) throws CouponDoesNotExistException, CouponInvalidNameException, CouponInvalidAmountException, CouponInvalidPercentageException{
-		Coupon result = couponServ.updateCoupon(coupon);
-		return new ResponseEntity<String>("Coupon updated successfully.", HttpStatus.OK);
+	public ResponseEntity<String> updateCoupon(@RequestBody Coupon coupon) throws CouponDoesNotExistException, CouponInvalidNameException, CouponInvalidAmountException, CouponInvalidPercentageException, CouponAccessViolationException{
+		boolean result = couponServ.updateCoupon(coupon);
+		if(result)
+			return new ResponseEntity<String>("Coupon updated successfully.", HttpStatus.OK);
+		return new ResponseEntity<String>("Cannot update coupon.", HttpStatus.FORBIDDEN);
 	}
 	
 	@PutMapping("/coupons/update")
-	public ResponseEntity<String> updateCoupons(@RequestBody List<Coupon> list) throws CouponAlreadyExistsException, CouponInvalidAmountException, CouponInvalidPercentageException, CouponInvalidNameException{
-		List<Coupon> result = couponServ.updateCoupons(list);
-		return new ResponseEntity<String>("Coupons updated successfully.", HttpStatus.OK);
+	public ResponseEntity<String> updateCoupons(@RequestBody List<Coupon> list) throws CouponAlreadyExistsException, CouponInvalidAmountException, CouponInvalidPercentageException, CouponInvalidNameException, CouponDoesNotExistException, CouponAccessViolationException{
+		boolean result = couponServ.updateCoupons(list);
+		if(result)
+			return new ResponseEntity<String>("Coupons updated successfully.", HttpStatus.OK);
+		return new ResponseEntity<String>("Cannot update coupons.", HttpStatus.FORBIDDEN);
 	}
 	
 	@DeleteMapping("/coupon/delete/{id}")
 	@ResponseBody
-	public ResponseEntity<String> deleteCoupon(@PathVariable int id) throws CouponDoesNotExistException{
+	public ResponseEntity<String> deleteCoupon(@PathVariable int id) throws CouponDoesNotExistException, CouponAccessViolationException{
 		boolean result = couponServ.deleteCoupon(id);
 		if(result)
 			return new ResponseEntity<String>("Coupon deleted successfully.", HttpStatus.OK);
@@ -85,11 +90,29 @@ public class CouponController {
 	
 	@DeleteMapping("/coupons/deleteAll")
 	@ResponseBody
-	public ResponseEntity<String> deleteAllCoupons(){
+	public ResponseEntity<String> deleteAllCoupons() throws CouponAccessViolationException{
 		boolean result = couponServ.deleteAllCoupons();
 		if(result)
 			return new ResponseEntity<String>("Coupons deleted successfully.", HttpStatus.OK);
 		return new ResponseEntity<String>("Cannot delete.", HttpStatus.BAD_REQUEST);
 	}
-
+	
+	@GetMapping("/coupon/name/{name}")
+	public ResponseEntity<List<Coupon>> getCouponByName(@PathVariable String name) throws CouponDoesNotExistException{
+		List<Coupon> coupons = couponServ.getCouponByName(name);
+		return new ResponseEntity<List<Coupon>>(coupons, HttpStatus.FOUND);
+	}
+	
+	@GetMapping("/coupon/percent/{percent}")
+	public ResponseEntity<List<Coupon>> getCouponByPercent(@PathVariable int percent) throws CouponDoesNotExistException{
+		List<Coupon> coupons = couponServ.getCouponByPercentage(percent);
+		return new ResponseEntity<List<Coupon>>(coupons, HttpStatus.FOUND);
+	}
+	
+	@GetMapping("coupon/amount/{amount}")
+	public ResponseEntity<List<Coupon>> getCouponByAmount(@PathVariable double amount) throws CouponDoesNotExistException{
+		List<Coupon> coupons = couponServ.getCouponByAmount(amount);
+		return new ResponseEntity<List<Coupon>>(coupons, HttpStatus.FOUND);
+	}
+ 
 }

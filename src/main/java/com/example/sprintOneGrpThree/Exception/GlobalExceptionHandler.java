@@ -5,8 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
-
 @ControllerAdvice
 public class GlobalExceptionHandler extends Exception {
 	
@@ -34,5 +32,9 @@ public class GlobalExceptionHandler extends Exception {
 	public ResponseEntity<String> cpnInvalidPercentage(CouponInvalidPercentageException couponInvalidPercentageException){
 		return new ResponseEntity<String>("OOPS! Invalid percentage. Please check and try again.", HttpStatus.BAD_REQUEST);
 	}
-
+	
+	@ExceptionHandler(value = CouponAccessViolationException.class)
+	public ResponseEntity<String> couponAccessViolation(CouponAccessViolationException couponAccessViolationException){
+		return new ResponseEntity<String>("ACCESS DENIED!!!", HttpStatus.FORBIDDEN);
+	}
 }
