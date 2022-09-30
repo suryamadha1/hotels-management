@@ -34,7 +34,7 @@ public class Transaction {
 	private String payment_mode;
 	private int amount;
 	private int coupon_id;
-	private double discount_amount;
+	private float discount_amount;
 	
 	@ManyToOne
 	private Customer customer;
@@ -42,22 +42,6 @@ public class Transaction {
 	@ManyToOne
 	private Hotel hotel;
 
-	public Transaction(int id, String booked_rooms_id, LocalDate transaction_date, LocalDateTime check_in,
-			LocalDateTime check_out, int number_of_people, String payment_mode, int amount, int coupon_id,
-			Customer customer, Hotel hotel) {
-		super();
-		this.id = id;
-		this.booked_rooms_id = booked_rooms_id;
-		this.transaction_date = transaction_date;
-		this.check_in = check_in;
-		this.check_out = check_out;
-		this.number_of_people = number_of_people;
-		this.payment_mode = payment_mode;
-		this.amount = amount;
-		this.coupon_id = coupon_id;
-		this.customer = customer;
-		this.hotel = hotel;
-	}
 
 
 	

@@ -13,6 +13,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.sprintOneGrpThree.Entity.Coupon;
 import com.example.sprintOneGrpThree.Entity.Customer;
 import com.example.sprintOneGrpThree.Entity.Hotel;
 import com.example.sprintOneGrpThree.Entity.Rooms;
@@ -98,7 +99,8 @@ public class RoomsServiceImpl implements RoomsService{
 		return availableRooms;
 	}
 	
-	public void addToTransactions(List<Integer> room_ids, Transaction transaction, int amount, Hotel hotelobj,double discamount) {
+	public void addToTransactions(List<Integer> room_ids, Transaction transaction, int amount, Hotel hotelobj, 
+			double coupon_amount, float coupon_percentage) {
 		
 		
 		
@@ -108,7 +110,12 @@ public class RoomsServiceImpl implements RoomsService{
 		Session obj = sessionRepository.findAll().stream().findFirst().get();
 		Customer c = customerRepository.findById(obj.getId()).get();
 		Transaction newtransaction = new Transaction();
-		
+		float discamount = 0;
+		if(coupon_percentage != 0) {
+			discamount = amount - (amount * coupon_percentage);
+		}
+		else
+			discamount = (float) (amount - coupon_amount);
 		
 		newtransaction.setAmount(amount);
 		newtransaction.setCustomer(c);
@@ -135,7 +142,6 @@ public class RoomsServiceImpl implements RoomsService{
 		if (ValidRoomIdChecker(room_ids)==true) {
 			Set<Hotel> hotel = new HashSet<>();
 			int amount = 0;
-			double discamount = 0;
 			List<Rooms> available_rooms = RoomAvaibilityChecker(room_ids);
 			List<Rooms> bookedroomlist = new ArrayList<>();
 			if(available_rooms.size()==room_ids.size()) {
@@ -149,16 +155,13 @@ public class RoomsServiceImpl implements RoomsService{
 						System.out.println("room type:" +roomsrepo.findById(id).get().getRoom_type().getRoom_price());
 						int room_price = roomsrepo.findById(id).get().getRoom_type().getRoom_price();
 						amount += room_price;
-						double coupon_amount = couponrepo.findById(transaction.getCoupon_id()).get().getAmount();
-						double coupon_percentage = (roomsrepo.findById(id).get().getRoom_type().getRoom_price());
-						if(coupon_amount == 0)
-							discamount += (room_price * coupon_percentage);
-						else
-							discamount += (room_price - coupon_amount);
+
 				}
 				Hotel newobj = roomsrepo.findById(room_ids.get(0)).get().getFk_hotel_id();
 				System.out.println(hotel);
-				addToTransactions(room_ids,transaction,amount,newobj,discamount);
+				double coupon_amount = couponrepo.findById(transaction.getCoupon_id()).get().getAmount();
+				float coupon_percentage = (float) ((couponrepo.findById(transaction.getCoupon_id()).get().getPercentage())/100.0);
+				addToTransactions(room_ids,transaction,amount,newobj,coupon_amount,coupon_percentage);
 				System.out.println(room_ids);
 				return Optional.ofNullable(bookedroomlist);
 			}
