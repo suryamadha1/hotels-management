@@ -150,7 +150,7 @@ public class RoomsServiceImpl implements RoomsService{
 						int room_price = roomsrepo.findById(id).get().getRoom_type().getRoom_price();
 						amount += room_price;
 						double coupon_amount = couponrepo.findById(transaction.getCoupon_id()).get().getAmount();
-						double coupon_percentage = (roomsrepo.findById(id).get().getRoom_type().getRoom_price());
+						double coupon_percentage = (roomsrepo.findById(id).get().getRoom_type().getRoom_price())/100;
 						if(coupon_amount == 0)
 							discamount += (room_price * coupon_percentage);
 						else
