@@ -2,6 +2,7 @@ package com.example.sprintOneGrpThree.Service;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.example.sprintOneGrpThree.Entity.Rooms;
@@ -17,5 +18,11 @@ public interface RoomsService {
 	public Optional<List<Rooms>> bookRoomById(List<Integer> room_ids, Transaction transaction) throws InvalidOperationException;
 	
 	public Optional<List<Rooms>> unbookRoomById(List<Integer> room_ids);
+	
+	public Optional<List<Rooms>> getUnbookedRooms();
+	
+	public Optional<List<Rooms>> getBookedRooms() throws CustomerScopeViolationException;
+	
+	public Map<Integer, String> bookedRoomsStatus() throws CustomerScopeViolationException;
 
 }

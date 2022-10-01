@@ -3,6 +3,7 @@ package com.example.sprintOneGrpThree.Controller;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,10 +74,57 @@ public class RoomsController {
 	}
 	
 	@GetMapping(value="/checkout",params="room_ids")
-	private ResponseEntity<Optional<List<Rooms>>> unbookRoomById(@RequestParam List<Integer> room_ids){
+	private ResponseEntity<String> unbookRoomById(@RequestParam List<Integer> room_ids){
 		Optional<List<Rooms>> roomsObj = roomserv.unbookRoomById(room_ids);
-		System.out.println("BOOKED ROOMS are:" + roomsObj);
-		return new ResponseEntity<Optional<List<Rooms>>> (roomsObj, HttpStatus.OK);
+		if(roomsObj==null) {
+			System.out.println("ONE OR MORE OF THE SELECTED ROOM ID's ARE INVALID");
+			return new ResponseEntity<String> ("ONE OR MORE OF THE SELECTED ROOM ID's ARE INVALID", HttpStatus.BAD_REQUEST);
+		}
+		else {
+			System.out.println("UNBOOKED ROOM/S :" + roomsObj);
+			return new ResponseEntity<String> ("UNBOOKED ROOM/S \n"+roomsObj.toString(), HttpStatus.OK);
+		}
+	}
+	
+	@GetMapping("/getUnbookedRooms")
+	private ResponseEntity<String> getUnbookedRooms(){
+		Optional<List<Rooms>> roomsObj = roomserv.getUnbookedRooms();
+		if (roomsObj.isPresent()) {
+			String str = "";
+			for(Rooms room: roomsObj.get()) {
+				str+=room+"\n";
+			}
+			System.out.println("AVAILABLE ROOMS ARE: " + str);
+			return new ResponseEntity<String> ("AVAILABLE ROOMS ARE\n" + str, HttpStatus.OK);
+		}
+		else {
+			System.out.println("ALL THE ROOMS ARE BOOKED");
+			return new ResponseEntity<String> ("SORRY, ALL THE ROOMS ARE BOOKED RIGHT NOW", HttpStatus.OK);
+		}	
+	}
+	
+	@GetMapping("/getBookedRooms")
+	private ResponseEntity<String> getBookedRooms() throws CustomerScopeViolationException{
+		Optional<List<Rooms>> roomsObj = roomserv.getBookedRooms();
+		if (roomsObj.isPresent()) {
+			String str ="";
+			for(Rooms room: roomsObj.get()) {
+				str+=room+"\n";
+			}
+			System.out.println("BOOKED ROOMS ARE: " + str);
+			return new ResponseEntity<String> ("BOOKED ROOMS ARE\n" + str, HttpStatus.OK);
+		}
+		else {
+			System.out.println("ALL THE ROOMS ARE UNBOOKED");
+			return new ResponseEntity<String> ("ALL THE ROOMS ARE UNBOOKED", HttpStatus.OK);
+		}	
+	}
+	
+	@GetMapping("/bookedRoomsStatus")
+	private ResponseEntity<Map<Integer, String>> bookedRoomsStatus() throws CustomerScopeViolationException{
+		Map<Integer, String> roomsObj = roomserv.bookedRoomsStatus();
+		return new ResponseEntity<Map<Integer, String>> (roomsObj,HttpStatus.OK);
 		
 	}
+	
 }

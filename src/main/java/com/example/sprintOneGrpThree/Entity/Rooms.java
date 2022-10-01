@@ -22,9 +22,7 @@ public class Rooms implements Serializable{
 	@Id
 	private int id;
 	
-	@JoinColumn(name="fk_hotel_id",referencedColumnName="hotel_id")
-	@ManyToOne(optional = true,fetch = FetchType.LAZY)
-	private Hotel fk_hotel_id;
+
 	private String room_no;
 	private int floor_no;
 	private boolean booked_status;
@@ -32,11 +30,13 @@ public class Rooms implements Serializable{
 	@JoinColumn(name="room_type",referencedColumnName="type")
 	@ManyToOne(optional = true,fetch = FetchType.LAZY)
 	private Room_desc room_type;
-
+	@JoinColumn(name="fk_hotel_id",referencedColumnName="hotel_id")
+	@ManyToOne(optional = true,fetch = FetchType.LAZY)
+	private Hotel fk_hotel_id;
 
 	@Override
 	public String toString() {
-		return "[id=" + id + ", room_no=" + room_no + ", floor_no=" + floor_no + "]";
+		return "[id=" + id + ", room_no=" + room_no + ", floor_no=" + floor_no + ", hotel_name=" + fk_hotel_id.getName() +"]";
 	}
 
 }

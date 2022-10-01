@@ -5,17 +5,25 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.sprintOneGrpThree.Entity.Coupon;
 import com.example.sprintOneGrpThree.Entity.Customer;
 import com.example.sprintOneGrpThree.Entity.Hotel;
+import com.example.sprintOneGrpThree.Entity.Room_desc;
 import com.example.sprintOneGrpThree.Entity.Rooms;
 import com.example.sprintOneGrpThree.Entity.Session;
 import com.example.sprintOneGrpThree.Entity.Transaction;
@@ -55,7 +63,10 @@ public class RoomsServiceImpl implements RoomsService{
 			throw new CustomerScopeViolationException();
 		}
 		Hotel h = hotelrepo.findById(room.getFk_hotel_id().getId()).get();
+		Room_desc roomdesc = room_descrepo.findByType(room.getRoom_type().getType());
 		room.setFk_hotel_id(h);
+		room.setRoom_type(roomdesc);
+		System.out.println(room);
 		Rooms roomsObj = roomsrepo.save(room);
 		return roomsObj;
 	}
@@ -78,7 +89,7 @@ public class RoomsServiceImpl implements RoomsService{
 		}
 		else 
 			count=-1;
-			// MAYBE THROW A EMPTY LIST ERROR HERE
+			// MAYBE THROW A EMPTY LIST EXCEPTION HERE
 		if(count==0)
 			return true;
 		else
@@ -87,7 +98,6 @@ public class RoomsServiceImpl implements RoomsService{
 	
 	public List<Rooms> RoomAvaibilityChecker(List<Integer> room_ids) {
 		List<Rooms> temp = roomsrepo.findAllById(room_ids);
-		int count = 0;
 		List<Rooms> availableRooms = new ArrayList<>();
 		if (temp.size()>0) {
 			for(int id: room_ids) {
@@ -99,32 +109,24 @@ public class RoomsServiceImpl implements RoomsService{
 		return availableRooms;
 	}
 	
-	public void addToTransactions(List<Integer> room_ids, Transaction transaction, int amount, Hotel hotelobj, 
-			double coupon_amount, float coupon_percentage) {
-		
-		
-		
-//		Hotel h = hotelrepo.findById(transaction.getHotel().getId()).get();
-		
+	public void addToTransactions(List<Integer> room_ids, Transaction transaction, int amount, Hotel hotelobj) {
 		
 		Session obj = sessionRepository.findAll().stream().findFirst().get();
 		Customer c = customerRepository.findById(obj.getId()).get();
 		Transaction newtransaction = new Transaction();
+		double coupon_amount = couponrepo.findById(transaction.getCoupon_id()).get().getAmount();
+		float coupon_percentage = (float) ((couponrepo.findById(transaction.getCoupon_id()).get().getPercentage())/100.0);
 		float discamount = 0;
-		if(coupon_percentage != 0) {
+		if(coupon_percentage != 0) 
 			discamount = amount - (amount * coupon_percentage);
-		}
 		else
 			discamount = (float) (amount - coupon_amount);
-		
 		newtransaction.setAmount(amount);
 		newtransaction.setCustomer(c);
 		newtransaction.setHotel(hotelobj);
 		newtransaction.setBooked_rooms_id(room_ids.toString());
 		newtransaction.setCheck_in(transaction.getCheck_in());
 		newtransaction.setCheck_out(transaction.getCheck_out());
-//		newtransaction.setCustomer_id();   get customer id for session/login table
-//		newtransaction.setHotel_id();		not added for cases when multiple hotels selected WIP 
 		newtransaction.setNumber_of_people(transaction.getNumber_of_people());
 		newtransaction.setPayment_mode(transaction.getPayment_mode()); 
 		newtransaction.setTransaction_date(LocalDate.now());
@@ -159,9 +161,7 @@ public class RoomsServiceImpl implements RoomsService{
 				}
 				Hotel newobj = roomsrepo.findById(room_ids.get(0)).get().getFk_hotel_id();
 				System.out.println(hotel);
-				double coupon_amount = couponrepo.findById(transaction.getCoupon_id()).get().getAmount();
-				float coupon_percentage = (float) ((couponrepo.findById(transaction.getCoupon_id()).get().getPercentage())/100.0);
-				addToTransactions(room_ids,transaction,amount,newobj,coupon_amount,coupon_percentage);
+				addToTransactions(room_ids,transaction,amount,newobj);
 				System.out.println(room_ids);
 				return Optional.ofNullable(bookedroomlist);
 			}
@@ -181,32 +181,83 @@ public class RoomsServiceImpl implements RoomsService{
 	
 	@Override
 	public Optional<List<Rooms>> unbookRoomById(List<Integer> room_ids) {
-		List<Rooms> temp = roomsrepo.findAllById(room_ids);
-		List<Rooms> bookedroomlist = new ArrayList<>();
-		System.out.println(room_ids);
-		if (temp.size()>0) {
-			for(int id: room_ids) {
-				System.out.println(roomsrepo.findById(id).isPresent());
-				if(roomsrepo.findById(id).isPresent()==true) {
+		if (ValidRoomIdChecker(room_ids)==true) {
+			List<Rooms> temp = roomsrepo.findAllById(room_ids);
+			List<Rooms> bookedroomlist = new ArrayList<>();
+			System.out.println(room_ids);
+			if (temp.size()>0) {
+				for(int id: room_ids) {
 					if(roomsrepo.findById(id).get().isBooked_status()==true) {
 						roomsrepo.findById(id).get().setBooked_status(false);
 						bookedroomlist.add(roomsrepo.findById(id).get());
 						roomsrepo.save(roomsrepo.findById(id).get());
 						System.out.println("Room "+roomsrepo.findById(id).get().getId()+" unbooked");
-						
 					}
 					else {
 						System.out.println("Room "+roomsrepo.findById(id).get().getId()+" is not booked");
 					}
 				}
-				else {
-					System.out.println("Room with id "+ id +" does not exists");
-				}
-				
+			}
+			return Optional.ofNullable(bookedroomlist);
+		}
+		else {
+			//INVALID ROOM ID GIVEN
+			return null;
+		}
+	}
+
+	@Override
+	public Optional<List<Rooms>> getUnbookedRooms() {
+		return Optional.ofNullable(roomsrepo.findAllByBookedstatus(false));
+		//return Optional.ofNullable(roomsrepo.findAll().stream().filter(x->x.isBooked_status()==false).collect(Collectors.toList()));
+	}
+
+	@Override
+	public Optional<List<Rooms>> getBookedRooms() throws CustomerScopeViolationException{
+		boolean res = sessionRepository.findAll().stream().anyMatch(n->n.getType().equals("staff"));
+		if(!res) {
+			throw new CustomerScopeViolationException();
+		}
+		return Optional.ofNullable(roomsrepo.findAllByBookedstatus(true));
+		//return Optional.ofNullable(roomsrepo.findAll().stream().filter(x->x.isBooked_status()==true).collect(Collectors.toList()));
+	}
+
+	@Override
+	public Map<Integer, String> bookedRoomsStatus() throws CustomerScopeViolationException{
+		boolean res = sessionRepository.findAll().stream().anyMatch(n->n.getType().equals("staff"));
+		if(!res) {
+			throw new CustomerScopeViolationException();
+		}
+		Map<Integer, String> result = new HashMap<>();
+		Optional<List<Rooms>> Bookedrooms = getBookedRooms();
+		List<Transaction> All_transactions = transactionrepo.findAll(Sort.by(Sort.Direction.DESC,"id"));
+		for(Rooms room: Bookedrooms.get()) {
+			System.out.println(room.getRoom_no()+"  "+room.isBooked_status());
+			for(Transaction transaction:All_transactions) {
+				String temp = transaction.getBooked_rooms_id();
+				temp = temp.substring(1,temp.length()-1);
+				temp = temp.replace(" ", "");
+				String[] strsplit = temp.split("[,]",0);
+				int found = 0;
+			       for(String myStr: strsplit) {
+                      if ( Integer.valueOf(myStr) == room.getId()) {
+                    	  String str="Customer_name="+ transaction.getCustomer().getName() +
+                    			  ", Hotel_name=" + room.getFk_hotel_id().getName() + 
+                    			  ", Room_no =" + room.getRoom_no() +
+                    	  		  ", Checkout_date=" + transaction.getCheck_out() +
+                    	  		  ", Customer_contact=" + transaction.getCustomer().getMobile();
+                    	  result.put(result.size(),str);
+                    	  found+=1;
+                      }
+			        }
+			    if ( found == strsplit.length )
+			    	break;
 			}
 		}
-		
-		return Optional.ofNullable(bookedroomlist);
+		for (Map.Entry<Integer, String> pair : result.entrySet()) {
+		    System.out.println(String.format("%s: %s", pair.getKey(), pair.getValue()));   
+		}
+		return result;
 	}
 
 }

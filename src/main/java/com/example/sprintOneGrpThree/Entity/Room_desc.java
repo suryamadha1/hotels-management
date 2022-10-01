@@ -26,7 +26,7 @@ public class Room_desc implements Serializable{
 	private int room_desc_id;
 //	@OneToMany(fetch = FetchType.LAZY,mappedBy = "room_type",cascade = CascadeType.ALL)
 	private String type;
-	private int room_price,no_of_beds,total_rooms,rooms_available;
+	private int room_price,no_of_beds;
 	private boolean balcony;
 	private String description;
 }
