@@ -12,6 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.sprintOneGrpThree.Entity.Rooms;
 import com.example.sprintOneGrpThree.Entity.Transaction;
 import com.example.sprintOneGrpThree.Exception.CustomerScopeViolationException;
+import com.example.sprintOneGrpThree.Exception.InvalidHotelIdException;
 import com.example.sprintOneGrpThree.Exception.InvalidOperationException;
 import com.example.sprintOneGrpThree.Service.RoomsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,10 +42,17 @@ public class RoomsController {
 		
 	}
 	
-	@GetMapping("/getRooms")
-	private ResponseEntity<List<Rooms>> getRooms(){
-		List<Rooms> roomsObj = roomserv.getRooms();
-		return new ResponseEntity<List<Rooms>> (roomsObj, HttpStatus.OK);
+	@GetMapping({"/getRooms","/getRooms/{hotel_id}"})
+	private ResponseEntity<List<Rooms>> getRooms(@PathVariable Optional<Integer> hotel_id) throws CustomerScopeViolationException,InvalidHotelIdException{
+		if (hotel_id.isPresent()) {
+			Optional<List<Rooms>> roomsObj = roomserv.getRoomsByHotelId(hotel_id.get());
+				System.out.println(roomsObj.get());
+				return new ResponseEntity<List<Rooms>> (roomsObj.get(), HttpStatus.OK);
+		}
+		else {
+			List<Rooms> roomsObj = roomserv.getRooms();
+			return new ResponseEntity<List<Rooms>> (roomsObj, HttpStatus.OK);
+		}
 		
 	}
 	
@@ -126,5 +135,8 @@ public class RoomsController {
 		return new ResponseEntity<Map<Integer, String>> (roomsObj,HttpStatus.OK);
 		
 	}
+	
+
+	
 	
 }

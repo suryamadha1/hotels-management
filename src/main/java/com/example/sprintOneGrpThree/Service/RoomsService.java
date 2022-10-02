@@ -8,12 +8,13 @@ import java.util.Optional;
 import com.example.sprintOneGrpThree.Entity.Rooms;
 import com.example.sprintOneGrpThree.Entity.Transaction;
 import com.example.sprintOneGrpThree.Exception.CustomerScopeViolationException;
+import com.example.sprintOneGrpThree.Exception.InvalidHotelIdException;
 import com.example.sprintOneGrpThree.Exception.InvalidOperationException;
 
 public interface RoomsService {
 	public Rooms addRoom(Rooms room) throws CustomerScopeViolationException;
 	
-	public List<Rooms> getRooms();
+	public List<Rooms> getRooms() throws CustomerScopeViolationException;
 	
 	public Optional<List<Rooms>> bookRoomById(List<Integer> room_ids, Transaction transaction) throws InvalidOperationException;
 	
@@ -24,5 +25,7 @@ public interface RoomsService {
 	public Optional<List<Rooms>> getBookedRooms() throws CustomerScopeViolationException;
 	
 	public Map<Integer, String> bookedRoomsStatus() throws CustomerScopeViolationException;
+	
+	public Optional<List<Rooms>> getRoomsByHotelId(int id) throws InvalidHotelIdException,CustomerScopeViolationException;
 
 }

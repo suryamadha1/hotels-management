@@ -28,6 +28,7 @@ import com.example.sprintOneGrpThree.Entity.Rooms;
 import com.example.sprintOneGrpThree.Entity.Session;
 import com.example.sprintOneGrpThree.Entity.Transaction;
 import com.example.sprintOneGrpThree.Exception.CustomerScopeViolationException;
+import com.example.sprintOneGrpThree.Exception.InvalidHotelIdException;
 import com.example.sprintOneGrpThree.Exception.InvalidOperationException;
 import com.example.sprintOneGrpThree.Repository.CouponRepository;
 import com.example.sprintOneGrpThree.Repository.CustomerRepository;
@@ -59,9 +60,8 @@ public class RoomsServiceImpl implements RoomsService{
 	public Rooms addRoom(Rooms room) throws CustomerScopeViolationException {
 //		if(room.getRoom_type())
 		boolean res = sessionRepository.findAll().stream().anyMatch(n->n.getType().equals("staff"));
-		if(!res) {
+		if(!res) 
 			throw new CustomerScopeViolationException();
-		}
 		Hotel h = hotelrepo.findById(room.getFk_hotel_id().getId()).get();
 		Room_desc roomdesc = room_descrepo.findByType(room.getRoom_type().getType());
 		room.setFk_hotel_id(h);
@@ -72,7 +72,11 @@ public class RoomsServiceImpl implements RoomsService{
 	}
 	
 	@Override
-	public List<Rooms> getRooms() {
+	public List<Rooms> getRooms() throws CustomerScopeViolationException{
+		boolean res = sessionRepository.findAll().stream().anyMatch(n->n.getType().equals("staff"));
+		if(!res) {
+			throw new CustomerScopeViolationException();
+		}
 		return roomsrepo.findAll();
 	}
 	
@@ -258,6 +262,21 @@ public class RoomsServiceImpl implements RoomsService{
 		    System.out.println(String.format("%s: %s", pair.getKey(), pair.getValue()));   
 		}
 		return result;
+	}
+
+	@Override
+	public Optional<List<Rooms>> getRoomsByHotelId(int id) throws InvalidHotelIdException,CustomerScopeViolationException{
+		boolean res = sessionRepository.findAll().stream().anyMatch(n->n.getType().equals("staff"));
+		if(!res)
+			throw new CustomerScopeViolationException();
+		Optional<List<Rooms>> roomsObj = Optional.ofNullable(roomsrepo.findAllByfk_hotel_id(id));
+		if (roomsObj.get().isEmpty()) {
+			System.out.println("INVALID HOTEL ID");
+			throw new InvalidHotelIdException();
+		}
+		else 
+			return roomsObj;
+		
 	}
 
 }

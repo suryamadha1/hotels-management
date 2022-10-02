@@ -54,6 +54,11 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<String>("ACCESS DENIED!!!", HttpStatus.FORBIDDEN);
 	}
 	
+	@ExceptionHandler(value = InvalidHotelIdException.class)
+	public ResponseEntity<String> invalidHotelId(InvalidHotelIdException invalidHotelIdException){
+		return new ResponseEntity<String>("Invalid hotel id given", HttpStatus.FORBIDDEN);
+	}
+	
 	
 
 }

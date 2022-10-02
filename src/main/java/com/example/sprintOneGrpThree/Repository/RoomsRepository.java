@@ -17,5 +17,8 @@ public interface RoomsRepository extends JpaRepository<Rooms,Integer> {
 
 	@Query("SELECT r FROM Rooms r WHERE r.booked_status = :type")
 	public List<Rooms> findAllByBookedstatus(@Param("type") Boolean value);
+	
+	@Query("SELECT r FROM Rooms r WHERE r.fk_hotel_id.id = :id")
+	public List<Rooms> findAllByfk_hotel_id(@Param("id") int value);
 }
 
